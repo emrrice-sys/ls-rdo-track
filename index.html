@@ -1,0 +1,859 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0e1116" />
+<title>Leaky's Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rye&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e1116;
+    --surface: #171b23;
+    --surface-2: #20242e;
+    --border: #2a2f3a;
+    --text: #e6e8ee;
+    --muted: #7a8090;
+    --dim: #565c69;
+    --accent: #ec4899;
+    --accent-soft: rgba(236,72,153,0.14);
+    --accent-strong: #f472b6;
+    --danger: #ef4444;
+    --danger-soft: rgba(239,68,68,0.12);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+    min-height: 100vh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 16px 16px 96px 16px; }
+
+  .topbar {
+    padding: 4px 0 16px;
+    margin-bottom: 14px;
+  }
+  .title-frame {
+    position: relative;
+    padding: 14px 32px;
+    background: #1a0e15;
+    border: 2px solid var(--accent);
+    border-radius: 3px;
+  }
+  .title-frame::before {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border: 1px solid var(--accent);
+    border-radius: 1px;
+    pointer-events: none;
+  }
+  .frame-corner {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: var(--accent-strong);
+    transform: rotate(45deg);
+    z-index: 1;
+  }
+  .frame-corner.tl { top: -6px; left: -6px; }
+  .frame-corner.tr { top: -6px; right: -6px; }
+  .frame-corner.bl { bottom: -6px; left: -6px; }
+  .frame-corner.br { bottom: -6px; right: -6px; }
+  .icon-btn {
+    flex: 0 0 auto;
+    width: 40px; height: 40px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: transparent; border: 0; color: var(--text);
+    border-radius: 10px; cursor: pointer;
+  }
+  .icon-btn:hover:not(:disabled) { background: var(--surface-2); }
+  .icon-btn:disabled { opacity: 0.28; cursor: not-allowed; }
+  .icon-btn.hidden { display: none; }
+  .title {
+    margin: 0;
+    position: relative;
+    font-family: "Rye", Georgia, "Times New Roman", serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--accent-strong);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    line-height: 1.1;
+  }
+  .reset-btn {
+    flex: 0 0 auto;
+    background: transparent;
+    border: 0;
+    color: var(--danger);
+    padding: 8px 10px;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .reset-btn:hover { background: var(--danger-soft); }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 4px 12px;
+    flex-wrap: wrap;
+  }
+  .toolbar:empty { display: none; }
+  .segmented {
+    display: inline-flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 3px;
+  }
+  .segmented button {
+    background: transparent;
+    border: 0;
+    color: var(--muted);
+    padding: 6px 14px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 7px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .segmented button.active {
+    background: var(--surface-2);
+    color: var(--text);
+  }
+  .segmented button:not(.active):hover { color: var(--text); }
+  .goal-wrap { display: flex; align-items: center; gap: 8px; }
+  .goal-label {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .subheader {
+    padding: 0 4px 14px;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .sh-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1 1 auto; }
+  .sh-right { display: flex; align-items: center; gap: 2px; flex: 0 0 auto; }
+  .subheader-text {
+    font-size: 15px;
+    color: var(--muted);
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    flex-wrap: wrap;
+  }
+  .subheader-text b { color: var(--text); font-weight: 600; }
+  .subheader-text .sets-total { color: var(--accent-strong); }
+  .subheader-text .done-tally { color: var(--dim); }
+  .sh-right .icon-btn { width: 36px; height: 36px; }
+
+  /* Home: category list */
+  .cat-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    color: inherit;
+    font: inherit;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .cat-row:hover { border-color: var(--surface-2); background: #1a1e27; }
+  .cat-row:active { background: var(--surface-2); }
+  .cat-row.maxed { opacity: 0.5; }
+  .cat-row.maxed .cat-name { color: var(--dim); }
+
+  .cat-main { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  .cat-name { font-size: 17px; font-weight: 600; color: var(--text); }
+  .cat-meta { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--muted); }
+  .bar { flex: 1; height: 4px; background: var(--surface-2); border-radius: 2px; overflow: hidden; max-width: 220px; }
+  .bar > span { display: block; height: 100%; background: var(--accent); transition: width 0.2s ease; }
+  .cat-row.maxed .bar > span { background: var(--dim); }
+
+  .cat-right { display: flex; align-items: center; gap: 10px; }
+  .sets-chip {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.02em;
+    padding: 5px 10px; border-radius: 999px;
+    background: var(--surface-2); color: var(--muted);
+    white-space: nowrap;
+  }
+  .sets-chip.has { background: var(--accent-soft); color: var(--accent-strong); }
+  .sets-chip.maxed { background: transparent; color: var(--dim); }
+  .chev {
+    width: 8px; height: 8px;
+    border-right: 2px solid var(--muted);
+    border-top: 2px solid var(--muted);
+    transform: rotate(45deg);
+  }
+
+  /* Detail: item list */
+  .item {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 10px 10px 14px;
+    background: var(--surface);
+    border: 1px solid color-mix(in oklab, var(--accent) 40%, var(--border));
+    border-radius: 10px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    color: inherit;
+    font: inherit;
+    transition: background 0.1s ease, border-color 0.15s ease, opacity 0.15s ease;
+  }
+  .item:active { background: var(--surface-2); }
+  .item:hover { border-color: color-mix(in oklab, var(--accent) 55%, var(--border)); }
+  .item.max { opacity: 0.5; border-color: var(--border); }
+  .item-name { font-size: 15px; color: var(--text); }
+  .item.max .item-name { color: var(--dim); }
+
+  .count-pill {
+    min-width: 36px;
+    height: 28px;
+    padding: 0 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .item.max .count-pill { background: var(--surface-2); color: var(--dim); }
+
+  .row-btn {
+    width: 36px; height: 36px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: transparent;
+    border: 0;
+    color: var(--muted);
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .row-btn:hover:not(:disabled) { background: var(--surface-2); color: var(--text); }
+  .row-btn.danger:hover:not(:disabled) { background: var(--danger-soft); color: var(--danger); }
+  .row-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .row-btn svg { display: block; }
+
+  /* Needed mode */
+  .needed-group { margin-bottom: 22px; }
+  .needed-group-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 4px 10px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .needed-group-header .name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .needed-group-header .count {
+    font-size: 12px;
+    color: var(--accent-strong);
+    font-weight: 600;
+  }
+  .needed-item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid color-mix(in oklab, var(--accent) 40%, var(--border));
+    border-radius: 10px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    color: inherit;
+    font: inherit;
+    transition: border-color 0.15s ease, background 0.1s ease;
+  }
+  .needed-item:hover { border-color: color-mix(in oklab, var(--accent) 55%, var(--border)); }
+  .needed-item:active { background: var(--surface-2); }
+  .needed-item .item-name { color: var(--text); font-size: 15px; }
+  .needed-item .count-pill {
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+  }
+
+  .maxed-item {
+    padding: 11px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 6px;
+    font-size: 15px;
+    color: var(--text);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 56px 16px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  footer {
+    margin: 28px 4px 16px;
+    color: var(--muted);
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .bottom-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 12px 16px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    pointer-events: none;
+    z-index: 10;
+  }
+  .bottom-nav::before {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 0; top: 0;
+    background: linear-gradient(to top, var(--bg) 45%, rgba(14,17,22,0));
+    pointer-events: none;
+    z-index: -1;
+  }
+  .bottom-nav .segmented {
+    max-width: 688px;
+    margin: 0 auto;
+    display: flex;
+    width: 100%;
+    pointer-events: auto;
+    border: 1px solid var(--accent);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.4);
+  }
+  .bottom-nav .segmented button { color: var(--text); }
+  .bottom-nav .segmented button.active {
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+  }
+  .segmented.fill { display: flex; }
+  .segmented.fill button {
+    flex: 1;
+    justify-content: center;
+    text-align: center;
+    padding: 10px 8px;
+  }
+
+  @media (max-width: 420px) {
+    .cat-name { font-size: 16px; }
+    .item-name { font-size: 14px; }
+    .row-btn { width: 34px; height: 34px; }
+    .bar { max-width: 140px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="topbar">
+    <div class="title-frame">
+      <span class="frame-corner tl"></span>
+      <span class="frame-corner tr"></span>
+      <span class="frame-corner bl"></span>
+      <span class="frame-corner br"></span>
+      <h1 class="title" id="pageTitle">Leaky's Ledger</h1>
+    </div>
+  </header>
+
+  <div class="toolbar" id="toolbar"></div>
+
+  <div class="subheader" id="subheader">
+    <div class="sh-left">
+      <button class="icon-btn hidden" id="backBtn" type="button" aria-label="Back">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+      <div class="subheader-text" id="subheaderText"></div>
+    </div>
+    <div class="sh-right">
+      <button class="icon-btn" id="undoBtn" type="button" aria-label="Undo" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-15-6.7L3 13"></path></svg>
+      </button>
+      <button class="reset-btn" id="resetBtn" type="button">Reset all</button>
+    </div>
+  </div>
+
+  <main id="view"></main>
+
+  <footer>Saved locally in this browser.</footer>
+</div>
+
+<nav class="bottom-nav" id="bottomNav">
+  <div class="segmented fill">
+    <button type="button" data-mode="browse">Browse</button>
+    <button type="button" data-mode="needed">Needed</button>
+    <button type="button" data-mode="sell">Sell</button>
+    <button type="button" data-mode="maxed">Maxed</button>
+  </div>
+</nav>
+
+<script>
+const MAX = 10;
+const CATEGORIES = [
+  ["Flowers", ["Texas Bluebonnet","Bitterweed","Agarita","Wild Rhubarb","Cardinal Flower","Creek Plum","Blood Flower","Chocolate Daisy","Wisteria"]],
+  ["Eggs", ["Spoonbill","Heron","Loon","Eagle","Vulture","Hawk","Egret","Duck","Goose"]],
+  ["Alcohol Bottles", ["Tennessee Whiskey","Irish Whiskey","Scotch Whisky","Absinthe","Gran Corazón Madeira","Old Tom Gin","Caribbean Rum","Cognac","London Dry Gin"]],
+  ["Cups", ["Ace","2","3","4","5","6","7","8","9","10","Page","Knight","Queen","King"]],
+  ["Swords", ["Ace","2","3","4","5","6","7","8","9","10","Page","Knight","Queen","King"]],
+  ["Wands", ["Ace","2","3","4","5","6","7","8","9","10","Page","Knight","Queen","King"]],
+  ["Pentacles", ["Ace","2","3","4","5","6","7","8","9","10","Page","Knight","Queen","King"]],
+  ["Heirlooms", ["Jade Hairpin","Cherrywood Comb","Ebony Hairbrush","Metal Hairpin","Carved Wooden Hairpin","Boxwood Comb","Goat Hairbrush","Ebony Hairpin","Ivory Hairpin","Rosewood Hairbrush","Tortoiseshell Comb","Ivory Comb","Horse Hair Brush","Boar Bristle Brush"]],
+  ["Bracelets", ["Greco Sapphire","Abello Ruby","Ojeda Rose Gold","Helena Gold","Durant Pearl","Infanta Turquoise","Elliston Carved","Hajnal Garnet"]],
+  ["Earrings", ["Ursula Citrine","Royal Victoria Diamond","Calumet Turquoise","Orchidee Diamond","Sterling Tooth","Harford Garnet","Duchess Emerald","Beauchene Ruby","Endicott Diamond","Josephine Pearl","Emmeline Coral"]],
+  ["Necklaces", ["Blakely Miniature","Richelieu Amethyst","Pelle Pearl","Ainsworth Cross","Braxton Amethyst","Rou Pearl","Gosselin White Gold","Dane Topaz","Tuamotu Pearl"]],
+  ["Rings", ["Harland Coral","Magnate Turquoise","Pilgrim Moonstone","Bonnard Pearl","Banais Topaz","Beaulieux Diamond","Yates Diamond","Aubrey Onyx","Bosque Emerald","Sackville Diamond","Thorburn Turquoise"]],
+];
+
+const STORAGE_KEY = "rdoCollector.v1";
+const MODE_KEY = "rdoCollector.mode.v1";
+const GOAL_KEY = "rdoCollector.goal.v1";
+const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const byName = Object.fromEntries(CATEGORIES.map(([n, items]) => [n, items]));
+const bySlug = Object.fromEntries(CATEGORIES.map(([n]) => [slug(n), n]));
+
+const key = (cat, item) => `${cat}||${item}`;
+const pl = (n, w) => `${n} ${n === 1 ? w : w + "s"}`;
+let counts = loadCounts();
+function loadCounts() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
+  catch { return {}; }
+}
+function saveCounts() { localStorage.setItem(STORAGE_KEY, JSON.stringify(counts)); }
+function countFor(cat, item) { return counts[key(cat, item)] | 0; }
+function setCount(cat, item, n) {
+  n = Math.max(0, Math.min(MAX, n | 0));
+  if (n === 0) delete counts[key(cat, item)];
+  else counts[key(cat, item)] = n;
+  saveCounts();
+}
+
+function catStats(cat) {
+  const items = byName[cat];
+  let minC = Infinity, sum = 0, readyForNext = 0;
+  for (const item of items) {
+    const n = countFor(cat, item);
+    sum += n;
+    if (n < minC) minC = n;
+  }
+  if (minC === Infinity) minC = 0;
+  for (const item of items) {
+    if (countFor(cat, item) > minC) readyForNext++;
+  }
+  return { sets: minC, total: items.length, sum, readyForNext, needed: items.length - readyForNext, maxed: minC === MAX };
+}
+
+let currentMode = (m => m === "needed" || m === "sell" || m === "maxed" ? m : "browse")(localStorage.getItem(MODE_KEY));
+let currentGoal = parseInt(localStorage.getItem(GOAL_KEY) || "1", 10) === 10 ? 10 : 1;
+function setMode(m) { currentMode = m; localStorage.setItem(MODE_KEY, m); }
+function setGoal(g) { currentGoal = g; localStorage.setItem(GOAL_KEY, String(g)); }
+
+const view = document.getElementById("view");
+const subheaderText = document.getElementById("subheaderText");
+const toolbar = document.getElementById("toolbar");
+const pageTitle = document.getElementById("pageTitle");
+const backBtn = document.getElementById("backBtn");
+const resetBtn = document.getElementById("resetBtn");
+const undoBtn = document.getElementById("undoBtn");
+const navBtns = document.querySelectorAll("#bottomNav .segmented button");
+
+const undoStack = [];
+const UNDO_LIMIT = 10;
+function snapshot() {
+  undoStack.push(JSON.stringify(counts));
+  if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+  updateUndoBtn();
+}
+function undo() {
+  if (undoStack.length === 0) return;
+  counts = JSON.parse(undoStack.pop());
+  saveCounts();
+  updateUndoBtn();
+  render();
+}
+function updateUndoBtn() { undoBtn.disabled = undoStack.length === 0; }
+
+backBtn.addEventListener("click", () => { location.hash = ""; });
+resetBtn.addEventListener("click", onReset);
+undoBtn.addEventListener("click", undo);
+navBtns.forEach(b => {
+  b.addEventListener("click", () => {
+    setMode(b.dataset.mode);
+    if (parseRoute().name !== "home") location.hash = "";
+    else render();
+  });
+});
+function updateNav() {
+  navBtns.forEach(b => b.classList.toggle("active", b.dataset.mode === currentMode));
+}
+
+function parseRoute() {
+  const h = location.hash.replace(/^#\/?/, "");
+  if (!h) return { name: "home" };
+  const [kind, s] = h.split("/");
+  if (kind === "set" && bySlug[s]) return { name: "category", cat: bySlug[s] };
+  return { name: "home" };
+}
+
+function render() {
+  updateNav();
+  const route = parseRoute();
+  if (route.name === "home") renderHome();
+  else renderCategory(route.cat);
+}
+window.addEventListener("hashchange", render);
+
+function onReset() {
+  const route = parseRoute();
+  if (route.name === "category") {
+    if (!confirm(`Reset all counts in ${route.cat}?`)) return;
+    snapshot();
+    for (const item of byName[route.cat]) delete counts[key(route.cat, item)];
+    saveCounts(); render();
+  } else {
+    if (!confirm("Reset every count to zero?")) return;
+    snapshot();
+    counts = {}; saveCounts(); render();
+  }
+}
+
+function renderHome() {
+  pageTitle.textContent = "Leaky's Ledger";
+  backBtn.classList.add("hidden");
+  resetBtn.textContent = "Reset all";
+  renderHomeToolbar();
+  if (currentMode === "needed") renderNeeded();
+  else if (currentMode === "sell") renderSell();
+  else if (currentMode === "maxed") renderMaxed();
+  else renderBrowse();
+}
+
+function renderHomeToolbar() {
+  toolbar.innerHTML = "";
+
+  if (currentMode === "needed") {
+    const wrap = document.createElement("div");
+    wrap.className = "goal-wrap";
+    const label = document.createElement("span");
+    label.className = "goal-label";
+    label.textContent = "Goal";
+    wrap.appendChild(label);
+
+    const goalSeg = document.createElement("div");
+    goalSeg.className = "segmented";
+    for (const g of [1, 10]) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = String(g);
+      if (g === currentGoal) b.classList.add("active");
+      b.addEventListener("click", () => { setGoal(g); render(); });
+      goalSeg.appendChild(b);
+    }
+    wrap.appendChild(goalSeg);
+    toolbar.appendChild(wrap);
+  }
+}
+
+function renderBrowse() {
+  let totalSets = 0, catsMaxed = 0;
+  for (const [cat] of CATEGORIES) {
+    const s = catStats(cat);
+    totalSets += s.sets;
+    if (s.maxed) catsMaxed++;
+  }
+  subheaderText.innerHTML = `
+    <span><b class="sets-total">${totalSets}</b> ${totalSets === 1 ? "set" : "sets"} completed${catsMaxed ? ` <span class="done-tally">· ${catsMaxed}/${CATEGORIES.length} maxed</span>` : ""}</span>
+  `;
+
+  view.innerHTML = "";
+  for (const [cat] of CATEGORIES) {
+    const s = catStats(cat);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "cat-row" + (s.maxed ? " maxed" : "");
+    const pct = s.maxed ? 100 : (s.readyForNext / s.total) * 100;
+    btn.innerHTML = `
+      <span class="cat-main">
+        <span class="cat-name"></span>
+        <span class="cat-meta">
+          <span class="bar"><span style="width:${pct}%"></span></span>
+          <span class="next-text"></span>
+        </span>
+      </span>
+      <span class="cat-right">
+        <span class="sets-chip"></span>
+        <span class="chev" aria-hidden="true"></span>
+      </span>
+    `;
+    btn.querySelector(".cat-name").textContent = cat;
+    btn.querySelector(".next-text").textContent = s.maxed ? "maxed" : `${s.needed} needed for next set`;
+    const chip = btn.querySelector(".sets-chip");
+    chip.textContent = pl(s.sets, "set");
+    if (s.maxed) chip.classList.add("maxed");
+    else if (s.sets > 0) chip.classList.add("has");
+    btn.addEventListener("click", () => { location.hash = `#/set/${slug(cat)}`; });
+    view.appendChild(btn);
+  }
+}
+
+function renderNeeded() {
+  const groups = [];
+  let totalLeft = 0;
+  for (const [cat, items] of CATEGORIES) {
+    const remaining = items.filter(it => countFor(cat, it) < currentGoal);
+    if (remaining.length === 0) continue;
+    totalLeft += remaining.length;
+    groups.push({ cat, remaining });
+  }
+
+  subheaderText.innerHTML = totalLeft === 0
+    ? ""
+    : `<span><b class="sets-total">${totalLeft}</b> ${totalLeft === 1 ? "item" : "items"} left at goal ${currentGoal}</span>`;
+
+  view.innerHTML = "";
+
+  if (groups.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.textContent = currentGoal === 1
+      ? "Every item has at least one. Nothing left."
+      : "Every item is maxed at 10. Nothing left.";
+    view.appendChild(empty);
+    return;
+  }
+
+  for (const { cat, remaining } of groups) {
+    const group = document.createElement("section");
+    group.className = "needed-group";
+
+    const header = document.createElement("div");
+    header.className = "needed-group-header";
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = cat;
+    const count = document.createElement("span");
+    count.className = "count";
+    count.textContent = `${remaining.length} needed`;
+    header.appendChild(name);
+    header.appendChild(count);
+    group.appendChild(header);
+
+    for (const item of remaining) {
+      const n = countFor(cat, item);
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className = "needed-item";
+      row.innerHTML = `
+        <span class="item-name"></span>
+        <span class="count-pill"></span>
+      `;
+      row.querySelector(".item-name").textContent = item;
+      row.querySelector(".count-pill").textContent = n;
+      row.addEventListener("click", () => {
+        const cur = countFor(cat, item);
+        if (cur >= MAX) return;
+        snapshot();
+        setCount(cat, item, cur + 1);
+        renderNeeded();
+      });
+      group.appendChild(row);
+    }
+
+    view.appendChild(group);
+  }
+}
+
+function renderSell() {
+  const sellable = [];
+  for (const [cat] of CATEGORIES) {
+    const s = catStats(cat);
+    if (s.sets >= 1) sellable.push({ cat, sets: s.sets });
+  }
+
+  subheaderText.innerHTML = sellable.length === 0
+    ? ""
+    : `<span><b class="sets-total">${sellable.length}</b> ${sellable.length === 1 ? "category" : "categories"} to sell</span>`;
+
+  view.innerHTML = "";
+
+  if (sellable.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.textContent = "No completed sets to sell yet.";
+    view.appendChild(empty);
+    return;
+  }
+
+  for (const { cat, sets } of sellable) {
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "needed-item";
+    row.innerHTML = `
+      <span class="item-name"></span>
+      <span class="count-pill"></span>
+    `;
+    row.querySelector(".item-name").textContent = cat;
+    row.querySelector(".count-pill").textContent = pl(sets, "set");
+    row.addEventListener("click", () => {
+      const cur = catStats(cat).sets;
+      if (cur === 0) return;
+      snapshot();
+      for (const item of byName[cat]) {
+        setCount(cat, item, countFor(cat, item) - cur);
+      }
+      renderSell();
+    });
+    view.appendChild(row);
+  }
+}
+
+function renderMaxed() {
+  const groups = [];
+  let total = 0;
+  for (const [cat, items] of CATEGORIES) {
+    const maxed = items.filter(it => countFor(cat, it) >= MAX);
+    if (maxed.length === 0) continue;
+    total += maxed.length;
+    groups.push({ cat, maxed });
+  }
+
+  subheaderText.innerHTML = total === 0
+    ? ""
+    : `<span><b class="sets-total">${total}</b> ${total === 1 ? "item" : "items"} maxed</span>`;
+
+  view.innerHTML = "";
+
+  if (groups.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.textContent = "No items have been maxed yet.";
+    view.appendChild(empty);
+    return;
+  }
+
+  for (const { cat, maxed } of groups) {
+    const group = document.createElement("section");
+    group.className = "needed-group";
+
+    const header = document.createElement("div");
+    header.className = "needed-group-header";
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = cat;
+    const count = document.createElement("span");
+    count.className = "count";
+    count.textContent = String(maxed.length);
+    header.appendChild(name);
+    header.appendChild(count);
+    group.appendChild(header);
+
+    for (const item of maxed) {
+      const row = document.createElement("div");
+      row.className = "maxed-item";
+      row.textContent = item;
+      group.appendChild(row);
+    }
+
+    view.appendChild(group);
+  }
+}
+
+function renderCategory(cat) {
+  pageTitle.textContent = cat;
+  backBtn.classList.remove("hidden");
+  resetBtn.textContent = `Reset ${cat}`;
+  toolbar.innerHTML = "";
+
+  const s = catStats(cat);
+  subheaderText.innerHTML = `
+    <span><b class="sets-total">${s.sets}</b> ${s.sets === 1 ? "set" : "sets"} completed</span>
+    <span>${s.maxed ? `<span class="done-tally">maxed out</span>` : `<b>${s.needed}</b> needed for next set`}</span>
+  `;
+
+  view.innerHTML = "";
+  for (const item of byName[cat]) {
+    const n = countFor(cat, item);
+    const row = document.createElement("button");
+    row.type = "button";
+    const state = n === 0 ? "zero" : (n === MAX ? "has max" : "has");
+    row.className = "item " + state;
+    row.innerHTML = `
+      <span class="item-name"></span>
+      <span class="count-pill"></span>
+      <button type="button" class="row-btn danger trash" aria-label="Clear" title="Clear">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+          <path d="M10 11v6"></path>
+          <path d="M14 11v6"></path>
+          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+        </svg>
+      </button>
+    `;
+    row.querySelector(".item-name").textContent = item;
+    row.querySelector(".count-pill").textContent = n;
+    const trash = row.querySelector(".trash");
+    trash.disabled = n === 0;
+
+    row.addEventListener("click", (e) => {
+      if (e.target.closest(".row-btn")) return;
+      const cur = countFor(cat, item);
+      if (cur >= MAX) return;
+      snapshot();
+      setCount(cat, item, cur + 1);
+      renderCategory(cat);
+    });
+    trash.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (countFor(cat, item) === 0) return;
+      snapshot();
+      setCount(cat, item, 0);
+      renderCategory(cat);
+    });
+    view.appendChild(row);
+  }
+}
+
+render();
+</script>
+</body>
+</html>
