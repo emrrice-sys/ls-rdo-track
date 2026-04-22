@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <meta name="theme-color" content="#0e1116" />
 <title>Leaky's Ledger</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -134,6 +134,28 @@
     color: var(--text);
   }
   .segmented button:not(.active):hover { color: var(--text); }
+  .search-bar { padding: 0 4px 12px; }
+  .search-bar input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 14px;
+    font: inherit;
+    font-size: 15px;
+    border-radius: 10px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .search-bar input:focus { border-color: var(--accent); }
+  .search-bar input::placeholder { color: var(--muted); }
+  .cat-matches {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .cat-matches b { color: var(--accent-strong); font-weight: 600; }
   .goal-wrap { display: flex; align-items: center; gap: 8px; }
   .goal-label {
     font-size: 12px;
@@ -172,7 +194,7 @@
     grid-template-columns: 1fr auto;
     align-items: center;
     gap: 16px;
-    padding: 16px;
+    padding: 20px 18px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 12px;
@@ -190,7 +212,7 @@
   .cat-row.maxed .cat-name { color: var(--dim); }
 
   .cat-main { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
-  .cat-name { font-size: 17px; font-weight: 600; color: var(--text); }
+  .cat-name { font-size: 18px; font-weight: 600; color: var(--text); }
   .cat-meta { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--muted); }
   .bar { flex: 1; height: 4px; background: var(--surface-2); border-radius: 2px; overflow: hidden; max-width: 220px; }
   .bar > span { display: block; height: 100%; background: var(--accent); transition: width 0.2s ease; }
@@ -217,8 +239,8 @@
     display: grid;
     grid-template-columns: 1fr auto auto;
     align-items: center;
-    gap: 8px;
-    padding: 10px 10px 10px 14px;
+    gap: 10px;
+    padding: 14px 12px 14px 16px;
     background: var(--surface);
     border: 1px solid color-mix(in oklab, var(--accent) 40%, var(--border));
     border-radius: 10px;
@@ -233,13 +255,13 @@
   .item:active { background: var(--surface-2); }
   .item:hover { border-color: color-mix(in oklab, var(--accent) 55%, var(--border)); }
   .item.max { opacity: 0.5; border-color: var(--border); }
-  .item-name { font-size: 15px; color: var(--text); }
+  .item-name { font-size: 16px; color: var(--text); }
   .item.max .item-name { color: var(--dim); }
 
   .count-pill {
-    min-width: 36px;
-    height: 28px;
-    padding: 0 10px;
+    min-width: 40px;
+    height: 32px;
+    padding: 0 12px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -248,12 +270,12 @@
     color: var(--accent-strong);
     font-variant-numeric: tabular-nums;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 14px;
   }
   .item.max .count-pill { background: var(--surface-2); color: var(--dim); }
 
   .row-btn {
-    width: 36px; height: 36px;
+    width: 40px; height: 40px;
     display: inline-flex; align-items: center; justify-content: center;
     background: transparent;
     border: 0;
@@ -292,7 +314,7 @@
     grid-template-columns: 1fr auto;
     align-items: center;
     gap: 12px;
-    padding: 12px 14px;
+    padding: 16px;
     background: var(--surface);
     border: 1px solid color-mix(in oklab, var(--accent) 40%, var(--border));
     border-radius: 10px;
@@ -306,19 +328,19 @@
   }
   .needed-item:hover { border-color: color-mix(in oklab, var(--accent) 55%, var(--border)); }
   .needed-item:active { background: var(--surface-2); }
-  .needed-item .item-name { color: var(--text); font-size: 15px; }
+  .needed-item .item-name { color: var(--text); font-size: 16px; }
   .needed-item .count-pill {
     background: var(--accent-soft);
     color: var(--accent-strong);
   }
 
   .maxed-item {
-    padding: 11px 14px;
+    padding: 14px 16px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 10px;
     margin-bottom: 6px;
-    font-size: 15px;
+    font-size: 16px;
     color: var(--text);
   }
 
@@ -328,6 +350,19 @@
     color: var(--muted);
     font-size: 14px;
   }
+
+  .cat-trash {
+    width: 40px; height: 40px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: transparent;
+    border: 0;
+    color: var(--muted);
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .cat-trash:hover:not(:disabled) { background: var(--danger-soft); color: var(--danger); }
+  .cat-trash:disabled { opacity: 0.25; cursor: not-allowed; }
+  .cat-trash svg { display: block; }
 
   footer {
     margin: 28px 4px 16px;
@@ -377,9 +412,6 @@
   }
 
   @media (max-width: 420px) {
-    .cat-name { font-size: 16px; }
-    .item-name { font-size: 14px; }
-    .row-btn { width: 34px; height: 34px; }
     .bar { max-width: 140px; }
   }
 </style>
@@ -413,6 +445,10 @@
     </div>
   </div>
 
+  <div class="search-bar" id="searchBar" style="display:none">
+    <input id="searchInput" type="search" placeholder="Search categories or items…" autocomplete="off" />
+  </div>
+
   <main id="view"></main>
 
   <footer>Saved locally in this browser.</footer>
@@ -422,8 +458,8 @@
   <div class="segmented fill">
     <button type="button" data-mode="browse">Browse</button>
     <button type="button" data-mode="needed">Needed</button>
-    <button type="button" data-mode="sell">Sell</button>
     <button type="button" data-mode="maxed">Maxed</button>
+    <button type="button" data-mode="sell">Sell</button>
   </div>
 </nav>
 
@@ -490,6 +526,11 @@ function setGoal(g) { currentGoal = g; localStorage.setItem(GOAL_KEY, String(g))
 const view = document.getElementById("view");
 const subheaderText = document.getElementById("subheaderText");
 const toolbar = document.getElementById("toolbar");
+const searchBar = document.getElementById("searchBar");
+const searchInput = document.getElementById("searchInput");
+searchInput.addEventListener("input", () => {
+  if (currentMode === "browse" && parseRoute().name === "home") renderBrowse();
+});
 const pageTitle = document.getElementById("pageTitle");
 const backBtn = document.getElementById("backBtn");
 const resetBtn = document.getElementById("resetBtn");
@@ -537,6 +578,9 @@ function parseRoute() {
 function render() {
   updateNav();
   const route = parseRoute();
+  searchBar.style.display = (route.name === "home" && currentMode === "browse") ? "" : "none";
+  resetBtn.style.display = route.name === "home" ? "" : "none";
+  resetBtn.textContent = "Reset all";
   if (route.name === "home") renderHome();
   else renderCategory(route.cat);
 }
@@ -559,7 +603,6 @@ function onReset() {
 function renderHome() {
   pageTitle.textContent = "Leaky's Ledger";
   backBtn.classList.add("hidden");
-  resetBtn.textContent = "Reset all";
   renderHomeToolbar();
   if (currentMode === "needed") renderNeeded();
   else if (currentMode === "sell") renderSell();
@@ -604,8 +647,20 @@ function renderBrowse() {
     <span><b class="sets-total">${totalSets}</b> ${totalSets === 1 ? "set" : "sets"} completed${catsMaxed ? ` <span class="done-tally">· ${catsMaxed}/${CATEGORIES.length} maxed</span>` : ""}</span>
   `;
 
+  const q = searchInput.value.trim().toLowerCase();
   view.innerHTML = "";
-  for (const [cat] of CATEGORIES) {
+  let shown = 0;
+
+  for (const [cat, items] of CATEGORIES) {
+    let matchedItems = null;
+    if (q) {
+      const catMatches = cat.toLowerCase().includes(q);
+      matchedItems = items.filter(it => it.toLowerCase().includes(q));
+      if (!catMatches && matchedItems.length === 0) continue;
+      if (catMatches) matchedItems = null;
+    }
+    shown++;
+
     const s = catStats(cat);
     const btn = document.createElement("button");
     btn.type = "button";
@@ -621,6 +676,15 @@ function renderBrowse() {
       </span>
       <span class="cat-right">
         <span class="sets-chip"></span>
+        <button type="button" class="cat-trash" aria-label="Reset category" title="Reset category">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+            <path d="M10 11v6"></path>
+            <path d="M14 11v6"></path>
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+          </svg>
+        </button>
         <span class="chev" aria-hidden="true"></span>
       </span>
     `;
@@ -630,8 +694,37 @@ function renderBrowse() {
     chip.textContent = pl(s.sets, "set");
     if (s.maxed) chip.classList.add("maxed");
     else if (s.sets > 0) chip.classList.add("has");
+    const catTrash = btn.querySelector(".cat-trash");
+    catTrash.disabled = s.sum === 0;
+    catTrash.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (s.sum === 0) return;
+      if (!confirm(`Reset all counts in ${cat}?`)) return;
+      snapshot();
+      for (const it of byName[cat]) delete counts[key(cat, it)];
+      saveCounts();
+      renderBrowse();
+    });
+
+    if (matchedItems && matchedItems.length) {
+      const hint = document.createElement("span");
+      hint.className = "cat-matches";
+      const label = matchedItems.length === 1 ? "match" : "matches";
+      hint.innerHTML = `${label}: ` + matchedItems.map(i => `<b></b>`).join(", ");
+      const bs = hint.querySelectorAll("b");
+      matchedItems.forEach((name, i) => bs[i].textContent = name);
+      btn.querySelector(".cat-main").appendChild(hint);
+    }
+
     btn.addEventListener("click", () => { location.hash = `#/set/${slug(cat)}`; });
     view.appendChild(btn);
+  }
+
+  if (q && shown === 0) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.textContent = `No matches for "${searchInput.value.trim()}".`;
+    view.appendChild(empty);
   }
 }
 
@@ -800,7 +893,6 @@ function renderMaxed() {
 function renderCategory(cat) {
   pageTitle.textContent = cat;
   backBtn.classList.remove("hidden");
-  resetBtn.textContent = `Reset ${cat}`;
   toolbar.innerHTML = "";
 
   const s = catStats(cat);
