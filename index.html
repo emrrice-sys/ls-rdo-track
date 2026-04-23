@@ -252,6 +252,14 @@
     font: inherit;
     transition: background 0.1s ease, border-color 0.15s ease, opacity 0.15s ease;
   }
+  @keyframes tap-flash {
+    0%, 45% { background: color-mix(in oklab, var(--accent) 30%, var(--surface)); }
+    100% { background: var(--surface); }
+  }
+  .item.tapped, .needed-item.tapped {
+    animation: tap-flash 1.4s ease-out;
+  }
+
   .item:active { background: var(--surface-2); }
   .item:hover { border-color: color-mix(in oklab, var(--accent) 55%, var(--border)); }
   .item.max { opacity: 0.5; border-color: var(--border); }
@@ -473,12 +481,32 @@ const CATEGORIES = [
   ["Swords", ["Ace","2","3","4","5","6","7","8","9","10","Page","Knight","Queen","King"]],
   ["Wands", ["Ace","2","3","4","5","6","7","8","9","10","Page","Knight","Queen","King"]],
   ["Pentacles", ["Ace","2","3","4","5","6","7","8","9","10","Page","Knight","Queen","King"]],
-  ["Heirlooms", ["Jade Hairpin","Cherrywood Comb","Ebony Hairbrush","Metal Hairpin","Carved Wooden Hairpin","Boxwood Comb","Goat Hairbrush","Ebony Hairpin","Ivory Hairpin","Rosewood Hairbrush","Tortoiseshell Comb","Ivory Comb","Horse Hair Brush","Boar Bristle Brush"]],
+  ["Heirlooms", ["Jade Hairpin","Cherrywood Comb","Ebony Hairbrush","Metal Hairpin","Carved Wooden Hairpin","Boxwood Comb","Goat Hairbrush","Ebony Hairpin","Ivory Hairpin","Rosewood Hairbrush","Tortoiseshell Comb","Ivory Comb","Horse Hair Brush","Boar Bristle Brush","New Guinea Rosewood Hairbrush"]],
   ["Bracelets", ["Greco Sapphire","Abello Ruby","Ojeda Rose Gold","Helena Gold","Durant Pearl","Infanta Turquoise","Elliston Carved","Hajnal Garnet"]],
   ["Earrings", ["Ursula Citrine","Royal Victoria Diamond","Calumet Turquoise","Orchidee Diamond","Sterling Tooth","Harford Garnet","Duchess Emerald","Beauchene Ruby","Endicott Diamond","Josephine Pearl","Emmeline Coral"]],
   ["Necklaces", ["Blakely Miniature","Richelieu Amethyst","Pelle Pearl","Ainsworth Cross","Braxton Amethyst","Rou Pearl","Gosselin White Gold","Dane Topaz","Tuamotu Pearl"]],
   ["Rings", ["Harland Coral","Magnate Turquoise","Pilgrim Moonstone","Bonnard Pearl","Banais Topaz","Beaulieux Diamond","Yates Diamond","Aubrey Onyx","Bosque Emerald","Sackville Diamond","Thorburn Turquoise"]],
 ];
+
+const TAROT_SUITS = new Set(["Cups", "Swords", "Wands", "Pentacles"]);
+for (const [name, items] of CATEGORIES) {
+  if (!TAROT_SUITS.has(name)) items.sort((a, b) => a.localeCompare(b));
+}
+const CATEGORY_ORDER = [
+  "Alcohol Bottles",
+  "Eggs",
+  "Flowers",
+  "Heirlooms",
+  "Cups",
+  "Pentacles",
+  "Swords",
+  "Wands",
+  "Bracelets",
+  "Earrings",
+  "Necklaces",
+  "Rings",
+];
+CATEGORIES.sort((a, b) => CATEGORY_ORDER.indexOf(a[0]) - CATEGORY_ORDER.indexOf(b[0]));
 
 const STORAGE_KEY = "rdoCollector.v1";
 const MODE_KEY = "rdoCollector.mode.v1";
@@ -536,6 +564,14 @@ const backBtn = document.getElementById("backBtn");
 const resetBtn = document.getElementById("resetBtn");
 const undoBtn = document.getElementById("undoBtn");
 const navBtns = document.querySelectorAll("#bottomNav .segmented button");
+
+let lastTapped = null;
+let lastTappedTimer = null;
+function markTap(id) {
+  lastTapped = id;
+  clearTimeout(lastTappedTimer);
+  lastTappedTimer = setTimeout(() => { lastTapped = null; }, 1400);
+}
 
 const undoStack = [];
 const UNDO_LIMIT = 10;
@@ -737,6 +773,7 @@ function renderNeeded() {
     totalLeft += remaining.length;
     groups.push({ cat, remaining });
   }
+  groups.sort((a, b) => a.remaining.length - b.remaining.length);
 
   subheaderText.innerHTML = totalLeft === 0
     ? ""
@@ -774,7 +811,8 @@ function renderNeeded() {
       const n = countFor(cat, item);
       const row = document.createElement("button");
       row.type = "button";
-      row.className = "needed-item";
+      const itemId = "needed|" + key(cat, item);
+      row.className = "needed-item" + (lastTapped === itemId ? " tapped" : "");
       row.innerHTML = `
         <span class="item-name"></span>
         <span class="count-pill"></span>
@@ -786,6 +824,7 @@ function renderNeeded() {
         if (cur >= MAX) return;
         snapshot();
         setCount(cat, item, cur + 1);
+        markTap(itemId);
         renderNeeded();
       });
       group.appendChild(row);
@@ -907,7 +946,8 @@ function renderCategory(cat) {
     const row = document.createElement("button");
     row.type = "button";
     const state = n === 0 ? "zero" : (n === MAX ? "has max" : "has");
-    row.className = "item " + state;
+    const itemId = "item|" + key(cat, item);
+    row.className = "item " + state + (lastTapped === itemId ? " tapped" : "");
     row.innerHTML = `
       <span class="item-name"></span>
       <span class="count-pill"></span>
@@ -932,6 +972,7 @@ function renderCategory(cat) {
       if (cur >= MAX) return;
       snapshot();
       setCount(cat, item, cur + 1);
+      markTap(itemId);
       renderCategory(cat);
     });
     trash.addEventListener("click", (e) => {
